@@ -18,23 +18,39 @@ provider:
         - dynamodb:DeleteItem
       Resource: "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_TABLE}"
 
-plugins:
-  - serverless-alexa-skills
 
 custom:
   alexa:
-    vendorId: ${env:AMAZON_VENDOR_ID}
-    clientId: ${env:AMAZON_CLIENT_ID}
-    clientSecret: ${env:AMAZON_CLIENT_SECRET}
-
-#functions:
-#  create:
-#    handler: todos/create.create
-#    events:
-#      - http:
-#          path: todos
-#         method: post
-#s          cors: true
+    vendorId: ${file(config/alexa-config.yml):AMAZON_VENDOR_ID}
+    clientId: ${file(config/alexa-config.yml):AMAZON_CLIENT_ID}
+    clientSecret: ${file(config/alexa-config.yml):AMAZON_CLIENT_SECRET}
+    skills:
+      - id: ${file(config/alexa-config.yml):ALEXA_SKILL_ID}
+        manifest:
+          publishingInformation:
+            locales:
+              en-US:
+                name: Meltzer Notes
+          apis:
+            custom:
+              endpoint:  
+                uri: 'arn:aws:lambda:us-east-1:849835118694:function:alexa-experiment-notes-dev-testFunction' #need to figure out how to genericize this
+                  #Fn::Join:
+                  #  - ''
+                  #  - - 'arn:aws:lambda:'
+                  #    - Ref: AWS::Region
+                  #    - ':'
+                  #    - Ref: 'AWS::AccountId'
+                  #    - ':function:${self:service}-${self:provider.stage}-testFunction'
+          manifestVersion: '1.0'
+          
+          
+functions:
+  testFunction:
+    handler: testFunction.test
+    events:
+      - alexaSkill: ${file(config/alexa-config.yml):ALEXA_SKILL_ID}
+      
 
 resources:
   Resources:
@@ -54,3 +70,8 @@ resources:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
         TableName: ${self:provider.environment.DYNAMODB_TABLE}
+
+
+plugins:
+  - serverless-alexa-skills
+  - serverless-pseudo-parameters
