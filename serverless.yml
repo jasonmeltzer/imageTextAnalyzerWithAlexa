@@ -31,6 +31,7 @@ custom:
             locales:
               en-US:
                 name: Meltzer Notes
+
           apis:
             custom:
               endpoint:  
@@ -43,11 +44,23 @@ custom:
                   #    - Ref: 'AWS::AccountId'
                   #    - ':function:${self:service}-${self:provider.stage}-testFunction'
           manifestVersion: '1.0'
-          
+        models:
+          en-US:
+            interactionModel:
+              languageModel:
+                invocationName: meltzer notes
+                intents:
+                  - name: MakeNote
+                    samples:
+                     - "Start a note"
+                     - "Make a note" 
+                     - "Create a note"
+                     - "Make one"
+                     - "Create one"        
           
 functions:
   testFunction:
-    handler: testFunction.test
+    handler: notesSkillIntentRouter.route
     events:
       - alexaSkill: ${file(config/alexa-config.yml):ALEXA_SKILL_ID}
       
@@ -56,7 +69,7 @@ resources:
   Resources:
     NotesDynamoDbTable:
       Type: 'AWS::DynamoDB::Table'
-      DeletionPolicy: Retain
+      DeletionPolicy: Delete
       Properties:
         AttributeDefinitions:
           -
