@@ -1,5 +1,9 @@
+# Make a file following this format with file name 'alexa-config-STAGE.yml', e.g. 'alexa-config-dev.yml'
+
 AMAZON_VENDOR_ID: AAAAAA
 AMAZON_CLIENT_ID: amzn1.application-oa2-client.AAAAA
 AMAZON_CLIENT_SECRET: AAAAAAA
+
+AWS_ACCOUNT: 88888888888
 
 ALEXA_SKILL_ID: amzn1.ask.skill.AAAAA

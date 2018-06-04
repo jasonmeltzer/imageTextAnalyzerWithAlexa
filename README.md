@@ -26,7 +26,7 @@ sls alexa create --name $YOUR_SKILL_NAME --locale $YOUR_SKILL_LOCALE --type $YOU
 
 For this app, I used 
 ``
- sls alexa create --name Notes --locale en-US --type custom
+ sls alexa create --name 'Meltzer Notes' --locale en-US --type custom
 ``
 
 Manifest information can be accessed using:

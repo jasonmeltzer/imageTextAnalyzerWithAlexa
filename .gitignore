@@ -1,4 +1,4 @@
-config/alexa-config.yml
+config/alexa-config-dev.yml
 
 .serverless
 .DS_Store
