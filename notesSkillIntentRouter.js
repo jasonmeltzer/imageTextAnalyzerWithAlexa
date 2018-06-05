@@ -15,11 +15,12 @@ const LaunchRequestHandler = {
 	    const requestAttributes = handlerInput.attributesManager.getRequestAttributes();
 		const sessionAttributes = handlerInput.attributesManager.getSessionAttributes();
 
-		const speakOutput = 'Welcome. To create a note, say \"Make a note.\"';
+		const speakOutput = 'Welcome. To get a note, say \"Get one.\"';
 		
 		handlerInput.attributesManager.setSessionAttributes(sessionAttributes);
 
 		return handlerInput.responseBuilder
+				.withShouldEndSession(false)
 		        .speak(speakOutput)
 		        .getResponse();
 
@@ -27,9 +28,10 @@ const LaunchRequestHandler = {
 		
 };
 
-const IntentHandler = {
+const GetNoteIntentHandler = {
 	canHandle(handlerInput) {
-        return handlerInput.requestEnvelope.request.type === 'IntentRequest';
+        return handlerInput.requestEnvelope.request.type === 'IntentRequest' &&
+               handlerInput.requestEnvelope.request.intent.name === 'GetNote';
 	},
 	handle(handlerInput) {
 		const requestAttributes = handlerInput.attributesManager.getRequestAttributes();
@@ -37,12 +39,14 @@ const IntentHandler = {
 
 		console.log(handlerInput.requestEnvelope);
 			
-		const speakOutput = 'TBD';
+		const speakOutput = 'I\'m still working on that. More soon.';
 			
 		handlerInput.attributesManager.setSessionAttributes(sessionAttributes);
 
 		return handlerInput.responseBuilder
 			    .speak(speakOutput)
+				.withShouldEndSession(false)
+			    .withSimpleCard('title', 'cardText')
 			    .getResponse();
 
 	}
@@ -50,9 +54,13 @@ const IntentHandler = {
 };
 
 
+
 const SessionEndedRequestHandler = {
 	canHandle(handlerInput) {
-        return handlerInput.requestEnvelope.request.type === 'SessionEndedRequest';
+        return 
+         handlerInput.requestEnvelope.request.type === 'SessionEndedRequest' ||
+         (handlerInput.requestEnvelope.request.type === 'IntentRequest' &&
+	      handlerInput.requestEnvelope.request.intent.name === 'AMAZON.StopIntent');
 	},
 	handle(handlerInput) {
 		const requestAttributes = handlerInput.attributesManager.getRequestAttributes();
@@ -63,6 +71,7 @@ const SessionEndedRequestHandler = {
 		handlerInput.attributesManager.setSessionAttributes(sessionAttributes);
 
 		return handlerInput.responseBuilder
+				.withShouldEndSession(true)
 			    .speak(speakOutput)
 			    .getResponse();
 
@@ -91,7 +100,7 @@ module.exports.route = (event, context, callback) => {
 module.exports.route = skillBuilder
 .addRequestHandlers(
   LaunchRequestHandler,
-  IntentHandler,
+  GetNoteIntentHandler,
   SessionEndedRequestHandler
 )
 //.addRequestInterceptors(LocalizationInterceptor)

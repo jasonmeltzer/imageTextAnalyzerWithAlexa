@@ -44,13 +44,17 @@ custom:
               languageModel:
                 invocationName: meltzer notes
                 intents:
-                  - name: MakeNote
+                  - name: GetNote
                     samples:
-                     - "Start a note"
-                     - "Make a note" 
-                     - "Create a note"
-                     - "Make one"
-                     - "Create one"        
+                     - "Get a note"
+                     - "Give me a note" 
+                     - "Get one"
+                     - "Get it"
+                  - name: AMAZON.StopIntent
+                    samples:
+                     - "goodbye"
+                     - "bye"
+                     - "exit"       
           
 functions:
   notesSkillIntentRouter:
