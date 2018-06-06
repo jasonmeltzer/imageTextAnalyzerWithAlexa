@@ -85,7 +85,6 @@ function moveS3File(s3Bucket, oldKey, newKey) {
 	});
 	
 	myPromise.then(function(result) {
-		console.log("Attempting to delete " + oldKey + " using params " + deleteParams + " with key " + deleteParams.Key);
 		s3.deleteObject(deleteParams, function(err, data) {
 			if (err) {
 				console.log(err);

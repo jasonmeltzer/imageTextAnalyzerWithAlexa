@@ -7,9 +7,9 @@ const uuid = require('uuid');
 
 module.exports.parse = (event, context, callback) => {
 
-	console.log(event);
+    console.log(event);
 	
-	// Derive the bucket and filename from the event
+    // Derive the bucket and filename from the event
     var bucket = event.Records[0].s3.bucket.name;
     var key = decodeURIComponent(event.Records[0].s3.object.key.replace(/\+/g, ' '));
     var params = {
