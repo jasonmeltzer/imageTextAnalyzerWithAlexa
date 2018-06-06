@@ -46,12 +46,18 @@ module.exports.parse = (event, context, callback) => {
         	    }
         	}
         	
+        	if (textLines.length == 0) {
+        		console.log("No text found in image");
+        		return;
+        	}
+        	
         	var dynamoParams = {
         	    TableName: process.env.DYNAMODB_TABLE,
         	    Item: {
         	      id: uuid.v1(),
         	      noteText: textLines,
-        	      user: 'jason' // TODO: Do something real here.
+        	      user: 'jason', // TODO: Do something real here.
+        	      originalS3Key: key
         	    }
         	};   
         	// write the note to the database

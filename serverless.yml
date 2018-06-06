@@ -9,6 +9,7 @@ provider:
     DYNAMODB_TABLE: ${self:service}-${opt:stage, self:provider.stage}-notes
     S3_BUCKET: meltzernotes-${opt:stage, self:provider.stage}
     AWS_ACCOUNT: ${file(config/alexa-config-${opt:stage, self:provider.stage}.yml):AWS_ACCOUNT}
+    REGION: ${opt:region, self:provider.region}
   iamRoleStatements:
     - Effect: Allow
       Action:
@@ -34,6 +35,10 @@ provider:
       Action:
         - rekognition:DetectText
       Resource: "*"
+    - Effect: Allow
+      Action:
+        - polly:SynthesizeSpeech
+      Resource: "*"
 
 custom:
   alexa:
@@ -57,7 +62,7 @@ custom:
           en-US:
             interactionModel:
               languageModel:
-                invocationName: meltzer notes
+                invocationName: meltzer's notes
                 intents:
                   - name: GetNote
                     samples:
@@ -83,6 +88,18 @@ functions:
           bucket: ${self:provider.environment.S3_BUCKET}
           events:
             - s3:ObjectCreated:*
+  createAudioForNote:
+    handler: createAudioForNote.create
+    events:
+      - stream:
+          type: dynamodb
+          arn:
+            Fn::GetAtt:
+              - NotesDynamoDbTable
+              - StreamArn
+          batchSize: 1
+          startingPosition: LATEST
+          enabled: true 
 
 resources:
   Resources:
@@ -118,7 +135,8 @@ resources:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
         TableName: ${self:provider.environment.DYNAMODB_TABLE}
-
+        StreamSpecification:
+          StreamViewType: NEW_AND_OLD_IMAGES
 
 plugins:
   - serverless-alexa-skills

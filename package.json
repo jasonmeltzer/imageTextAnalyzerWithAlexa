@@ -8,6 +8,7 @@
     "serverless-alexa-skills": "0.0.6"
   },
   "dependencies": {
-    "ask-sdk": "^2.0.5"
+    "ask-sdk": "^2.0.5",
+    "polly-s3": "0.0.2"
   }
 }

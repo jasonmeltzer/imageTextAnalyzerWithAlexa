@@ -58,13 +58,11 @@ const GetNoteIntentHandler = {
 				    console.error(error);
 				    speakOutput = "Couldn\'t find a note.";
 				} else {
-					console.log(result.Items.length);
 					
 					// Randomly choose one of the notes, for now.
 					var item = result.Items[Math.floor(Math.random() * result.Items.length)];
 					
 					speakOutput = item.noteText.join(' ');
-					
 				}
 
 				console.log(speakOutput);
@@ -74,16 +72,12 @@ const GetNoteIntentHandler = {
 				resolve(handlerInput.responseBuilder
 						    .speak(speakOutput)
 							.withShouldEndSession(false)
-						    .withSimpleCard('A note', 'cardText')
+						    .withSimpleCard('A note', speakOutput)
 						    .getResponse()
 				);
 		    });
-
-			
 		});
-
-
-	     
+    
 	}
 			
 };
