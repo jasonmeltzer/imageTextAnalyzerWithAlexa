@@ -22,64 +22,81 @@ module.exports.create = (event, context, callback) => {
 	var eventName = event.Records[0].eventName;
 	if (eventName.toUpperCase() === "INSERT") {
 		var noteText = event.Records[0].dynamodb.NewImage.noteText;
-		var originalS3Key = event.Records[0].dynamodb.NewImage.originalS3Key;
+		var originalS3Key = event.Records[0].dynamodb.NewImage.originalS3Key.S;
 		var sentence = "";
 		for (var i in noteText.L) {
 			sentence = sentence.concat(noteText.L[i].S);
 			sentence = sentence.concat(" ");
 		}
 		
-		var emmaUrl;
 		p.renderSentence( sentence, "Emma", function( err, url ){
 		    if( err )
 		    	console.log(err);
 		    else {
 		    	console.log( "Rendered speech is at URL:", url );
-		    	emmaUrl = url;
+		    	
+		    	// One problem with this library is it doesn't give you an opportunity to name the file.
+				// This will rename after the fact.
+				var emmaKey = url.split("/").slice("-1");
+				var newEmmaKey = originalS3Key + ".emma.mp3";
+				moveS3File(S3_BUCKET, emmaKey, newEmmaKey);
 		    }
 		});
 		
-		var brianUrl;
 		p.renderSentence( sentence, "Brian", function( err, url ){
 		    if( err )
 		    	console.log(err);
 		    else {
 		    	console.log( "Rendered speech is at URL:", url );
-		    	brianUrl = url;
+		    	
+		    	// One problem with this library is it doesn't give you an opportunity to name the file.
+				// This will rename after the fact.
+				var brianKey = url.split("/").slice("-1");
+				var newBrianKey = originalS3Key + ".brian.mp3";
+				moveS3File(S3_BUCKET, brianKey, newBrianKey);
 		    }
 		});		
-		
-		console.log("EmmaURL: " + emmaUrl);
-		console.log("BrianURL: " + brianUrl);
-		
-		// One problem with this library is it doesn't give you an opportunity to name the file.
-		// This will rename after the fact.
-		var emmaKey = emmaUrl.split("/").slice("-1");
-		var brianKey = brianUrl.split("/").slice("-1");
-		
-		var newEmmaKey = originalS3Key + ".emma.mp3";
-		var newBrianKey = originalS3Key + ".brian.mp3";
-		
-		moveS3File(S3_BUCKET, emmaKey, newEmmaKey);
-		moveS3File(S3_BUCKET, brianKey, newBrianKey);
 	}
    
 };
 
-
 function moveS3File(s3Bucket, oldKey, newKey) {
-	s3.copyObject({
+	console.log("moveS3File: oldKey=" + oldKey + ", newKey=" + newKey);
+	var copyParams = {
 		Bucket: s3Bucket, 
 		CopySource: s3Bucket + "/" + oldKey, 
 		Key: newKey
-	})
-	.promise()
-	.then(() => 
-		// Delete the old object
-		s3.deleteObject({
-			Bucket: s3Bucket, 
-		    Key: oldKey
-		}).promise()
-	)
-	.catch((e) => console.error(e))	
+	};
+	var deleteParams = {
+		Bucket: s3Bucket, 
+		Key: oldKey + "" // force this to be a string
+	};
+	
+	var myPromise = new Promise((resolve, reject) => {
+		s3.copyObject(copyParams, function(err, data) {
+			if (err) {
+				console.log(err);
+				reject(err);
+			} else {
+				console.log("Copied " + oldKey + " to " + newKey);
+				resolve();
+			}
+		});
+	});
+	
+	myPromise.then(function(result) {
+		console.log("Attempting to delete " + oldKey + " using params " + deleteParams + " with key " + deleteParams.Key);
+		s3.deleteObject(deleteParams, function(err, data) {
+			if (err) {
+				console.log(err);
+			} else {
+				console.log("Deleted " + oldKey);
+			}
+		});
+	}).catch(function(reject) {
+		console.log("Could not delete " + oldKey);
+	});
+
 }
+
+
