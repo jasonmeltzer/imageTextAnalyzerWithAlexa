@@ -7,6 +7,7 @@ provider:
   runtime: nodejs6.10
   environment:
     DYNAMODB_TABLE: ${self:service}-${opt:stage, self:provider.stage}-notes
+    S3_BUCKET: meltzernotes-${opt:stage, self:provider.stage}
     AWS_ACCOUNT: ${file(config/alexa-config-${opt:stage, self:provider.stage}.yml):AWS_ACCOUNT}
   iamRoleStatements:
     - Effect: Allow
@@ -18,7 +19,21 @@ provider:
         - dynamodb:UpdateItem
         - dynamodb:DeleteItem
       Resource: "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_TABLE}"
-
+    - Effect: Allow
+      Action:
+        - dynamodb:Query
+      Resource: "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_TABLE}/index/*"
+    - Effect: "Allow"
+      Action:
+        - "s3:*" #"s3:PutBucketNotification"
+      Resource: "*" # need to figure out how to give Rekognition access to the S3 bucket so I don't have to open up access to everyone.
+         #Fn::Join:
+         #  - ""
+         #  - - "arn:aws:s3:::${self:provider.environment.S3_BUCKET}"
+    - Effect: Allow
+      Action:
+        - rekognition:DetectText
+      Resource: "*"
 
 custom:
   alexa:
@@ -61,22 +76,44 @@ functions:
     handler: notesSkillIntentRouter.route
     events:
       - alexaSkill: ${file(config/alexa-config-${opt:stage, self:provider.stage}.yml):ALEXA_SKILL_ID}
-      
+  parseNoteImage:
+    handler: parseNoteImage.parse
+    events:
+      - s3:
+          bucket: ${self:provider.environment.S3_BUCKET}
+          events:
+            - s3:ObjectCreated:*
 
 resources:
   Resources:
+    # The S3 bucket is already created by the framework when attaching a bucket to a lambda.
+    #NotesS3Bucket:
+    #  Type: 'AWS::S3::Bucket'
+    #  Properties:
+    #    BucketName: ${self:provider.environment.S3_BUCKET}
+    #    AccessControl: Private
     NotesDynamoDbTable:
       Type: 'AWS::DynamoDB::Table'
       DeletionPolicy: Delete
       Properties:
         AttributeDefinitions:
-          -
-            AttributeName: id
+          - AttributeName: id
+            AttributeType: S
+          - AttributeName: user
             AttributeType: S
         KeySchema:
-          -
-            AttributeName: id
+          - AttributeName: id
             KeyType: HASH
+        GlobalSecondaryIndexes:
+          - IndexName: userIndex
+            KeySchema:
+            - AttributeName: user
+              KeyType: HASH
+            Projection:
+              ProjectionType: ALL
+            ProvisionedThroughput:
+              ReadCapacityUnits: '1'
+              WriteCapacityUnits: '1'
         ProvisionedThroughput:
           ReadCapacityUnits: 1
           WriteCapacityUnits: 1
